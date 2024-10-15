@@ -1,0 +1,19 @@
+{
+  "name": "arquitectura-base",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "testW": "jasmine-node servidor",
+    "test": "jasmine-node servidor"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.21.1"
+  },
+  "devDependencies": {
+    "jasmine-node": "^3.0.0"
+  },
+  "description": ""
+}

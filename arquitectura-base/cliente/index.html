@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Aplicación</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <script src="clienteRest.js"></script>
+    <script src="controlWeb.js"></script>
+</head>
+<body>
+    <nav class="navbar navbar-expand-sm bg-dark navbar-dark">
+        <a class="navbar-brand" href="#">Sistema</a>
+        <ul class="navbar-nav">
+            <li class="nav-item">
+                <a class="nav-link" href="#">Link 1</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#">Link 2</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#">Link 3</a>
+            </li>
+        </ul>
+    </nav>
+
+    <div class="container-fluid">
+        <h3>Arquitectura Base</h3>
+        
+        <!-- Sección para agregar un usuario -->
+        <div id="au"></div>
+
+        <!-- Sección para listar usuarios -->
+        <h4>Lista de Usuarios</h4>
+        <table class="table" id="usuariosTable">
+            <thead>
+                <tr>
+                    <th>Nick</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="usuariosBody"></tbody>
+        </table>
+
+        <!-- Sección para mostrar el número de usuarios -->
+        <div id="numeroUsuariosDiv">
+            <h5>Número de Usuarios: <span id="numeroUsuarios">0</span></h5>
+        </div>
+
+        <!-- Sección para verificar si un usuario está activo -->
+        <div id="verificarUsuarioDiv">
+            <h5>Verificar Usuario Activo</h5>
+            <input type="text" id="nickActivo" placeholder="Nick del usuario">
+            <button id="btnVerificarActivo" class="btn btn-info">Verificar</button>
+            <div id="resultadoActivo"></div>
+        </div>
+
+        <!-- Sección para eliminar un usuario -->
+        <div id="eliminarUsuarioDiv">
+            <h5>Eliminar Usuario</h5>
+            <input type="text" id="nickEliminar" placeholder="Nick del usuario">
+            <button id="btnEliminar" class="btn btn-danger">Eliminar</button>
+            <div id="resultadoEliminar"></div>
+        </div>
+    </div>
+
+    <script>
+        // Instanciar los objetos de ClienteRest y ControlWeb
+        let rest = new ClienteRest();
+        let cw = new ControlWeb();
+
+        // Mostrar el formulario al cargar la página
+        $(document).ready(function() {
+            cw.mostrarAgregarUsuario();
+            actualizarListaUsuarios();
+            actualizarNumeroUsuarios();
+
+            // Evento para verificar si un usuario está activo
+            $("#btnVerificarActivo").on("click", function() {
+                let nick = $("#nickActivo").val();
+                rest.usuarioActivo(nick);
+            });
+
+            // Evento para eliminar un usuario
+            $("#btnEliminar").on("click", function() {
+                let nick = $("#nickEliminar").val();
+                rest.eliminarUsuario(nick);
+            });
+        });
+
+        function actualizarListaUsuarios() {
+            // Llamar al método para obtener usuarios y actualizar la tabla
+            rest.obtenerUsuarios();
+        }
+
+        function actualizarNumeroUsuarios() {
+            // Llamar al método para obtener el número de usuarios y actualizar el conteo
+            rest.numeroUsuarios();
+        }
+    </script>
+</body>
+</html>
