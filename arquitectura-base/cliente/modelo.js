@@ -24,6 +24,12 @@ function Sistema(){
     this.numeroUsuarios = function() {
         return Object.keys(this.usuarios).length; // Cuenta las claves en el objeto usuarios
         };
+    
+    this.usuarioGoogle = function(usr, callback) {
+        this.cad.buscarOCrearUsuario(usr, function(obj) {
+            callback(obj);
+        });
+    };
         
         
 }

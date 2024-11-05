@@ -1,12 +1,21 @@
 function ClienteRest() {
     // Método para agregar un usuario usando $.getJSON
-    this.agregarUsuario = function (nick) {
+    this.agregarUsuario = function(nick) {
         var cli = this;
-        $.getJSON("/agregarUsuario/" + nick, function (data) {
+        $.getJSON("/agregarUsuario/" + nick, function(data) {
+            let msg = "El nick " + nick + " está ocupado";
             if (data.nick != -1) {
                 console.log("Usuario " + nick + " ha sido registrado");
+                msg = "Bienvenido al sistema, " + nick;
+                $.cookie("nick", nick); // Cambiado de localStorage a $.cookie
+                cw.mostrarMensaje(msg);
+                cw.mostrarBotonSalir();
+    
+                actualizarListaUsuarios();
+                actualizarNumeroUsuarios();
             } else {
                 console.log("El nick ya está ocupado");
+                cw.mostrarMensaje(msg);
             }
         });
     };
@@ -35,9 +44,8 @@ function ClienteRest() {
     // Método para obtener la lista de usuarios
     this.obtenerUsuarios = function () {
         $.getJSON("/obtenerUsuarios", function (data) {
-            $("#usuariosBody").empty(); // Limpiar la tabla antes de actualizar
+            $("#usuariosBody").empty();
             data.forEach(function(usuario) {
-                // Asegúrate de que 'nick' y 'activo' son las propiedades correctas
                 let row = `<tr>
                     <td>${usuario.nick}</td>
                     <td>${usuario.activo ? "Activo" : "Inactivo"}</td>
@@ -47,22 +55,21 @@ function ClienteRest() {
                 </tr>`;
                 $("#usuariosBody").append(row);
             });
-    
-            // Agregar evento de eliminación a los botones
+
             $(".btnEliminar").on("click", function() {
                 let nick = $(this).data("nick");
                 rest.eliminarUsuario(nick);
-                $(this).closest("tr").remove(); // Eliminar la fila de la tabla
+                $(this).closest("tr").remove(); 
+                actualizarNumeroUsuarios();
             });
         }).fail(function() {
             console.log("Error al obtener usuarios");
         });
     };
-
     // Método para obtener el número de usuarios y actualizar el conteo
     this.numeroUsuarios = function () {
         $.getJSON("/numeroUsuarios", function (data) {
-            $("#numeroUsuarios").text(data.num); // Actualizar el número de usuarios
+            $("#numeroUsuarios").text(data.num);
         });
     };
 
@@ -77,7 +84,8 @@ function ClienteRest() {
     this.eliminarUsuario = function (nick) {
         $.getJSON("/eliminarUsuario/" + nick, function (data) {
             $("#resultadoEliminar").text("Usuario " + data.eliminado + " ha sido eliminado");
-            actualizarNumeroUsuarios(); // Actualizar el conteo de usuarios después de eliminar
+            actualizarNumeroUsuarios();
+            actualizarListaUsuarios();
         });
     };
 }

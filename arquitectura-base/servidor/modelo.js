@@ -1,16 +1,23 @@
+const datos = require("./cad.js");
 function Sistema(){
+    this.cad = new datos.CAD();
+    this.cad.conectar((db) => {
+        console.log("Conectado a Mongo Atlas");
+    });
     this.usuarios={}; // que tipo coleccion???
     //operaciones sobre la colección
     this.agregarUsuario = function (nick) {
-        let res = { nick: -1 };
+        let res = { nick: -1 }; // Inicializa el resultado
         if (!this.usuarios[nick]) {
-            this.usuarios[nick] = new Usuario(nick);
+            // Solo agregar si el usuario no existe
+            this.usuarios[nick] = new Usuario(nick); // Crear nuevo usuario
+            this.usuarios[nick].activo = true; // Marcar el usuario como activo
             console.log("Usuario agregado:", this.usuarios);
-            res.nick = nick;
+            res.nick = nick; // Retornar el nick del usuario
         } else {
             console.log("El nick " + nick + " está en uso");
         }
-        return res;
+        return res; // Retorna el resultado
     };
     this.obtenerUsuarios = function () {
         // Convertir el objeto usuarios a un array de usuarios
