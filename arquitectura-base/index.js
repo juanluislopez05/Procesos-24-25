@@ -1,39 +1,39 @@
 const fs = require("fs");
-const express = require("express");
-const path = require("path");
-const modelo = require("./servidor/modelo.js"); // Asegúrate de que el modelo esté correctamente referenciado
-const bodyParser = require("body-parser");
+const express = require('express');
 const app = express();
+const passport = require("passport");
+const session = require("express-session"); // Cambiado a express-session
+const modelo = require("./servidor/modelo.js");
 const PORT = process.env.PORT || 3000;
 
-const passport = require("passport");
 require("./servidor/passport-setup.js");
-const session = require("express-session"); // Importa express-session
+require('dotenv').config();
 
-// Inicializa la sesión con express-session
+// Configuración de archivos estáticos
+app.use(express.static(__dirname + "/"));
+
+// Configuración de express-session
 app.use(session({
-    secret: 'yourSecretKey', // Cambia esto a una clave segura
+    secret: 'your_secret_key', // Cambia esto a una clave secreta única
     resave: false,
-    saveUninitialized: true,
-    cookie: { secure: false } // Cambia a 'true' si usas HTTPS en producción
+    saveUninitialized: false,
+    cookie: { maxAge: 24 * 60 * 60 * 1000 } // Configuración de la duración de la cookie (24 horas)
 }));
 
+// Inicialización de Passport
 app.use(passport.initialize());
 app.use(passport.session());
 
-// Configura la ruta de autenticación con Google
-app.get("/auth/google", passport.authenticate('google', { scope: ['profile', 'email'] }));
+let sistema = new modelo.Sistema(); // Inicialización de la instancia de sistema
 
-// Define la ruta de callback de autenticación con Google
-app.get('/google/callback', 
-    passport.authenticate('google', { failureRedirect: '/fallo' }), 
-    function(req, res) {
+// Rutas de autenticación
+app.get('/google/callback',
+    passport.authenticate('google', { failureRedirect: '/fallo' }),
+    function (req, res) {
         res.redirect('/good');
-    }
-);
+    });
 
-// Ruta de éxito de autenticación
-app.get("/good", function(request, response) {
+app.get("/good", function (request, response) {
     let nick = request.user.emails[0].value;
     if (nick) {
         sistema.agregarUsuario(nick);
@@ -42,64 +42,50 @@ app.get("/good", function(request, response) {
     response.redirect('/');
 });
 
-// Ruta de fallo de autenticación
-app.get("/fallo", function(request, response) {
-    response.send({nick: "nook"});
+app.get("/fallo", function (request, response) {
+    response.send({ nick: "nook" });
 });
 
-// Configura Express para servir archivos estáticos desde la carpeta "cliente"
-app.use(express.static(path.join(__dirname, 'cliente')));
+app.get("/auth/google", passport.authenticate('google', { scope: ['profile', 'email'] }));
 
-let sistema = new modelo.Sistema();
-
-// Ruta para servir la página principal (index.html)
-app.get("/", (req, res) => {
-    res.sendFile(path.join(__dirname, "cliente", "index.html"));
+// Ruta principal para el cliente
+app.get("/", function (request, response) {
+    let contenido = fs.readFileSync(__dirname + "/Cliente/index.html");
+    response.setHeader('Content-Type', 'text/html');
+    response.send(contenido);
 });
 
-// Rutas para manejar solicitudes
-app.get("/agregarUsuario/:nick", (request, response) => {
+// Rutas del sistema
+app.get("/agregarUsuario/:nick", function (request, response) {
     let nick = request.params.nick;
-    let resultado = sistema.agregarUsuario(nick);
-    response.json(resultado);
+    let res = sistema.agregarUsuario(nick);
+    response.send(res);
 });
 
-app.get('/obtenerUsuarios', (req, res) => {
-    let usuarios = sistema.obtenerUsuarios();
-    res.json(usuarios);
+app.get("/eliminarUsuario/:nick", function (request, response) {
+    let nick = request.params.nick;
+    let res = sistema.eliminarUsuario(nick);
+    response.send(res);
 });
 
-app.get('/usuarioActivo/:nick', (req, res) => {
-    let nick = req.params.nick;
-    let isActive = sistema.usuarioActivo(nick);
-    res.json({ activo: isActive });
+app.get("/obtenerUsuarios", function (request, response) {
+    let res = sistema.obtenerUsuarios();
+    response.send(res);
 });
 
-app.get('/numeroUsuarios', (req, res) => {
-    let numUsuarios = sistema.numeroUsuarios();
-    res.json({ num: numUsuarios });
+app.get("/usuarioActivo/:nick", function (request, response) {
+    let nick = request.params.nick;
+    let res = sistema.usuarioActivo(nick);
+    response.send(res);
 });
 
-app.get('/eliminarUsuario/:nick', (req, res) => {
-    let nick = req.params.nick;
-    sistema.eliminarUsuario(nick);
-    res.json({ eliminado: nick });
+app.get("/numeroUsuarios", function (request, response) {
+    let res = sistema.numeroUsuarios();
+    response.send(res);
 });
 
-// Middleware para procesar datos en el cuerpo de las solicitudes
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(bodyParser.json());
-
-// Ruta para el callback de Google One Tap
-app.post('/oneTap/callback',
-    passport.authenticate('google-one-tap', { failureRedirect: '/fallo' }),
-    function(req, res) {
-        res.redirect('/good');
-    }
-);
-
-// Inicia el servidor en el puerto especificado
+// Inicia el servidor
 app.listen(PORT, () => {
     console.log(`App está escuchando en el puerto ${PORT}`);
-    console.log("Ctrl+C para salir");
+    console.log('Ctrl+C para salir');
 });

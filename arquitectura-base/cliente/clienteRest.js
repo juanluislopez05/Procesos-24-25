@@ -1,5 +1,5 @@
 function ClienteRest() {
-    // Método para agregar un usuario usando $.getJSON
+    // Método para agregar un usuario    
     this.agregarUsuario = function(nick) {
         var cli = this;
         $.getJSON("/agregarUsuario/" + nick, function(data) {
@@ -8,84 +8,58 @@ function ClienteRest() {
                 console.log("Usuario " + nick + " ha sido registrado");
                 msg = "Bienvenido al sistema, " + nick;
                 $.cookie("nick", nick); // Cambiado de localStorage a $.cookie
-                cw.mostrarMensaje(msg);
-                cw.mostrarBotonSalir();
-    
-                actualizarListaUsuarios();
-                actualizarNumeroUsuarios();
-            } else {
-                console.log("El nick ya está ocupado");
-                cw.mostrarMensaje(msg);
             }
+            else {
+                console.log("El nick ya está ocupado");
+            }
+            cw.mostrarMsg(msg);
+            cw.mostrarHome();
         });
-    };
+    }
 
-    // Método para agregar un usuario usando $.ajax
+
     this.agregarUsuario2 = function (nick) {
-        var cli = this;
-        $.ajax({
-            type: 'GET',
-            url: '/agregarUsuario/' + nick,
-            success: function (data) {
-                if (data.nick != -1) {
-                    console.log("Usuario " + nick + " ha sido registrado");
-                } else {
-                    console.log("El nick ya está ocupado");
-                }
-            },
-            error: function (xhr, textStatus, errorThrown) {
-                console.log("Status: " + textStatus);
-                console.log("Error: " + errorThrown);
-            },
-            contentType: 'application/json'
-        });
-    };
+        //TODO
+    }
 
     // Método para obtener la lista de usuarios
     this.obtenerUsuarios = function () {
-        $.getJSON("/obtenerUsuarios", function (data) {
-            $("#usuariosBody").empty();
-            data.forEach(function(usuario) {
-                let row = `<tr>
-                    <td>${usuario.nick}</td>
-                    <td>${usuario.activo ? "Activo" : "Inactivo"}</td>
-                    <td>
-                        <button class="btn btn-danger btnEliminar" data-nick="${usuario.nick}">Eliminar</button>
-                    </td>
-                </tr>`;
-                $("#usuariosBody").append(row);
-            });
-
-            $(".btnEliminar").on("click", function() {
-                let nick = $(this).data("nick");
-                rest.eliminarUsuario(nick);
-                $(this).closest("tr").remove(); 
-                actualizarNumeroUsuarios();
-            });
-        }).fail(function() {
-            console.log("Error al obtener usuarios");
+        let cli = this;
+        $.getJSON("/obtenerUsuarios", function (lista) {
+            console.log(lista);
         });
-    };
-    // Método para obtener el número de usuarios y actualizar el conteo
+    }
+
+    // Método para obtener el número de usuarios
     this.numeroUsuarios = function () {
+        let cli = this;
         $.getJSON("/numeroUsuarios", function (data) {
-            $("#numeroUsuarios").text(data.num);
+            console.log("Número de usuarios registrados: ", +data.numeroUsuarios);
         });
-    };
+    }
 
-    // Método para verificar si un usuario está activo
+    // Método para comprobar si un usuario está activo
     this.usuarioActivo = function (nick) {
+        let cli = this;
         $.getJSON("/usuarioActivo/" + nick, function (data) {
-            $("#resultadoActivo").text(data.activo ? "El usuario está activo" : "El usuario no está activo");
-        });
-    };
+            if (data.activo) {
+                console.log("El usuario " + nick + " está activo");
+            } else {
+                console.log("El usuario " + nick + " no está activo o no existe");
+            }
+        })
+    }
 
     // Método para eliminar un usuario
     this.eliminarUsuario = function (nick) {
         $.getJSON("/eliminarUsuario/" + nick, function (data) {
-            $("#resultadoEliminar").text("Usuario " + data.eliminado + " ha sido eliminado");
-            actualizarNumeroUsuarios();
-            actualizarListaUsuarios();
-        });
-    };
+            if (data.eliminado) {
+                console.log("El usuario " + nick + " ha sido eliminado");
+                $.removeCookie("nick");
+                location.reload();
+            } else {
+                console.log("El usuario " + nick + " no existe");
+            }
+        })
+    }
 }
